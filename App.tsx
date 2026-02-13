@@ -4,6 +4,7 @@ import { Patient, PatientFormData, DocumentConfig } from './types';
 import { storageService } from './services/storageService';
 import PatientForm from './components/PatientForm';
 import DocumentModal from './components/DocumentModal';
+import NotificationModal from './components/NotificationModal';
 import {
   Search,
   Users,
@@ -26,6 +27,21 @@ const App: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedPatientForDoc, setSelectedPatientForDoc] = useState<Patient | null>(null);
   const [autoOpenDocConfig, setAutoOpenDocConfig] = useState<Partial<DocumentConfig> | null>(null);
+
+  // State for Custom Modal
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm' | 'success';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert',
+    onConfirm: () => { },
+  });
 
   useEffect(() => {
     const init = async () => {
@@ -78,10 +94,17 @@ const App: React.FC = () => {
   };
 
   const handleDeletePatient = async (id: string) => {
-    if (confirm('Deseja realmente excluir este cadastro?')) {
-      await storageService.deletePatient(id);
-      setPatients([...storageService.getPatients()]);
-    }
+    setNotification({
+      isOpen: true,
+      title: 'Excluir Paciente',
+      message: 'Tem certeza que deseja excluir este cadastro? Esta ação não pode ser desfeita.',
+      type: 'confirm',
+      onConfirm: async () => {
+        await storageService.deletePatient(id);
+        setPatients([...storageService.getPatients()]);
+        setNotification(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
 
@@ -246,6 +269,11 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      <NotificationModal
+        {...notification}
+        onCancel={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

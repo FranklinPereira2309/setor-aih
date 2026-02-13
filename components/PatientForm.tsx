@@ -16,8 +16,15 @@ import {
   Clock,
   UserPlus,
   Edit3,
-  AlertCircle
+  AlertCircle,
+  Hash,
+  Search,
+  Plus,
+  Loader2,
+  Save
 } from 'lucide-react';
+import { procedimentoService } from '../services/procedimentoService';
+import NotificationModal from './NotificationModal';
 
 // Schema de Validação com Zod
 const patientSchema = z.object({
@@ -64,6 +71,24 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
 
   const [currentTime] = useState(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [currentDate] = useState(new Date().toLocaleDateString('pt-BR'));
+  const [isSearchingCode, setIsSearchingCode] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [newCode, setNewCode] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [procedureCode, setProcedureCode] = useState('');
+
+  // State for Custom Modal
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm' | 'success';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert',
+  });
 
   useEffect(() => {
     if (patient) {
@@ -83,6 +108,49 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const masked = applyPhoneMask(e.target.value);
     setValue('phone', masked, { shouldValidate: true });
+  };
+
+  const handleLookupProcedure = async () => {
+    if (!procedureCode.trim()) return;
+
+    setIsSearchingCode(true);
+    try {
+      const proc = await procedimentoService.getByCode(procedureCode);
+      if (proc) {
+        setValue('procedimento', proc.description, { shouldValidate: true });
+      } else {
+        setNewCode(procedureCode);
+        setNewDescription('');
+        setShowRegisterModal(true);
+      }
+    } catch (err) {
+      console.error('Erro na busca:', err);
+    } finally {
+      setIsSearchingCode(false);
+    }
+  };
+
+  const handleSaveNewProcedure = async () => {
+    if (!newCode || !newDescription) return;
+
+    try {
+      const proc = await procedimentoService.create({
+        code: newCode,
+        description: newDescription
+      });
+      if (proc) {
+        setValue('procedimento', proc.description, { shouldValidate: true });
+        setProcedureCode(newCode);
+        setShowRegisterModal(false);
+      }
+    } catch (err) {
+      setNotification({
+        isOpen: true,
+        title: 'Erro no Cadastro',
+        message: 'Não foi possível salvar o procedimento. Verifique sua conexão ou tente novamente.',
+        type: 'alert'
+      });
+    }
   };
 
   const onSubmit = (data: PatientFormValues) => {
@@ -189,13 +257,35 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
 
               <div>
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-tight">
-                  <ClipboardList size={14} /> Procedimento
+                  <Hash size={14} className="text-blue-500" /> Código do Procedimento
+                </label>
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Ex: 04.04.01.010-5"
+                    value={procedureCode}
+                    onChange={e => setProcedureCode(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleLookupProcedure())}
+                    className="flex-1 px-4 py-3.5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLookupProcedure}
+                    disabled={isSearchingCode}
+                    className="px-6 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center shadow-lg shadow-blue-100"
+                  >
+                    {isSearchingCode ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-tight">
+                  <ClipboardList size={14} /> Descrição do Procedimento
                 </label>
                 <textarea
                   {...register('procedimento')}
                   rows={2}
                   className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-sm"
-                  placeholder="Ex: Colecistectomia por Vídeo..."
+                  placeholder="Descrição da cirurgia ou procedimento..."
                 />
               </div>
 
@@ -227,6 +317,58 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
           </div>
         </form>
       </div>
+
+      {/* Modal de Cadastro de Procedimento */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Plus size={24} className="text-blue-600" /> Novo Procedimento
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowRegisterModal(false)}
+                className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+              >
+                <X size={20} className="text-slate-500" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Código</label>
+                <input
+                  type="text"
+                  value={newCode}
+                  onChange={e => setNewCode(e.target.value)}
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Descrição (NOME DO PROCEDIMENTO)</label>
+                <textarea
+                  value={newDescription}
+                  onChange={e => setNewDescription(e.target.value.toUpperCase())}
+                  rows={3}
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveNewProcedure}
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
+              >
+                <Save size={20} /> Salvar e Usar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <NotificationModal
+        {...notification}
+        onConfirm={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

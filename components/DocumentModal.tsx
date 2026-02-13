@@ -2,7 +2,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Patient, DocumentConfig } from '../types';
 import { generatePatientDocument } from '../services/pdfService';
-import { X, Printer, Download, FileText, Loader2, ClipboardList, MapPin, Calendar, Clock, RefreshCw } from 'lucide-react';
+import { X, Printer, Download, FileText, Loader2, ClipboardList, MapPin, Calendar, Clock, RefreshCw, Hash, Save, Search as SearchIcon, Plus } from 'lucide-react';
+import { procedimentoService } from '../services/procedimentoService';
+import { Procedimento } from '../types';
+import NotificationModal from './NotificationModal';
 
 interface DocumentModalProps {
   patient: Patient;
@@ -13,6 +16,24 @@ interface DocumentModalProps {
 const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, onClose }) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
+  const [isSearchingCode, setIsSearchingCode] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [newCode, setNewCode] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [procedureCode, setProcedureCode] = useState('');
+
+  // State for Custom Modal
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm' | 'success';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert',
+  });
 
   const [config, setConfig] = useState<DocumentConfig>(() => {
     const today = new Date();
@@ -48,6 +69,49 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
       console.error('Falha ao gerar PDF:', error);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleLookupProcedure = async () => {
+    if (!procedureCode.trim()) return;
+
+    setIsSearchingCode(true);
+    try {
+      const proc = await procedimentoService.getByCode(procedureCode);
+      if (proc) {
+        setConfig(prev => ({ ...prev, procedimento: proc.description }));
+      } else {
+        setNewCode(procedureCode);
+        setNewDescription('');
+        setShowRegisterModal(true);
+      }
+    } catch (err) {
+      console.error('Erro na busca:', err);
+    } finally {
+      setIsSearchingCode(false);
+    }
+  };
+
+  const handleSaveNewProcedure = async () => {
+    if (!newCode || !newDescription) return;
+
+    try {
+      const proc = await procedimentoService.create({
+        code: newCode,
+        description: newDescription
+      });
+      if (proc) {
+        setConfig(prev => ({ ...prev, procedimento: proc.description }));
+        setProcedureCode(newCode);
+        setShowRegisterModal(false);
+      }
+    } catch (err) {
+      setNotification({
+        isOpen: true,
+        title: 'Erro no Cadastro',
+        message: 'Não foi possível salvar o procedimento. Verifique sua conexão ou tente novamente.',
+        type: 'alert'
+      });
     }
   };
 
@@ -101,6 +165,29 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
               <ClipboardList size={14} /> Dados do Comprovante
             </h3>
             <div className="space-y-6 flex-1">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-tighter flex items-center gap-2">
+                  <Hash size={14} className="text-blue-500" /> Código do Procedimento
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ex: 04.04.01.010-5"
+                    value={procedureCode}
+                    onChange={e => setProcedureCode(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleLookupProcedure()}
+                    className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                  />
+                  <button
+                    onClick={handleLookupProcedure}
+                    disabled={isSearchingCode}
+                    className="px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {isSearchingCode ? <Loader2 size={18} className="animate-spin" /> : <SearchIcon size={18} />}
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-tighter">Descrição do Procedimento</label>
                 <textarea
@@ -237,6 +324,52 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
           </div>
         </div>
       </div>
+      {/* Modal de Cadastro de Procedimento */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
+            <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Plus size={24} className="text-blue-600" /> Novo Procedimento
+              </h2>
+              <button onClick={() => setShowRegisterModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <X size={20} className="text-slate-500" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Código</label>
+                <input
+                  type="text"
+                  value={newCode}
+                  onChange={e => setNewCode(e.target.value)}
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Descrição (NOME DO PROCEDIMENTO)</label>
+                <textarea
+                  value={newDescription}
+                  onChange={e => setNewDescription(e.target.value.toUpperCase())}
+                  rows={3}
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                />
+              </div>
+              <button
+                onClick={handleSaveNewProcedure}
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
+              >
+                <Save size={20} /> Salvar e Usar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <NotificationModal
+        {...notification}
+        onConfirm={() => setNotification(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

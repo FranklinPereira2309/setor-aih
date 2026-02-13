@@ -17,3 +17,12 @@ export interface DocumentConfig {
 }
 
 export type PatientFormData = Omit<Patient, 'id' | 'updatedAt'>;
+
+export interface Procedimento {
+  id?: string;
+  code: string;
+  description: string;
+  created_at?: string;
+}
+
+export type ProcedimentoFormData = Omit<Procedimento, 'id' | 'created_at'>;
