@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Patient, PatientFormData, DocumentConfig } from '../types';
-import { validateCPF, validateCNS, applyCadSusMask, applyPhoneMask, validateMobilePhone } from '../services/validationService';
+import { validateCPF, validateCNS, applyCadSusMask, applyPhoneMask, validateMobilePhone, applyProcedureMask } from '../services/validationService';
 import {
   X,
   CreditCard,
@@ -110,16 +110,23 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
     setValue('phone', masked, { shouldValidate: true });
   };
 
+  const handleProcedureCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = applyProcedureMask(e.target.value);
+    setProcedureCode(masked);
+  };
+
   const handleLookupProcedure = async () => {
     if (!procedureCode.trim()) return;
 
+    const cleanCode = procedureCode.replace(/\D/g, '');
     setIsSearchingCode(true);
     try {
-      const proc = await procedimentoService.getByCode(procedureCode);
+      const proc = await procedimentoService.getByCode(cleanCode);
       if (proc) {
-        setValue('procedimento', proc.description, { shouldValidate: true });
+        const masked = applyProcedureMask(cleanCode);
+        setValue('procedimento', `${masked} - ${proc.description}`, { shouldValidate: true });
       } else {
-        setNewCode(procedureCode);
+        setNewCode(cleanCode);
         setNewDescription('');
         setShowRegisterModal(true);
       }
@@ -133,14 +140,16 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
   const handleSaveNewProcedure = async () => {
     if (!newCode || !newDescription) return;
 
+    const cleanCode = newCode.replace(/\D/g, '');
     try {
       const proc = await procedimentoService.create({
-        code: newCode,
+        code: cleanCode,
         description: newDescription
       });
       if (proc) {
-        setValue('procedimento', proc.description, { shouldValidate: true });
-        setProcedureCode(newCode);
+        const masked = applyProcedureMask(cleanCode);
+        setValue('procedimento', `${masked} - ${proc.description}`, { shouldValidate: true });
+        setProcedureCode(masked);
         setShowRegisterModal(false);
       }
     } catch (err) {
@@ -170,7 +179,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl my-8 overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            {patient ? <Edit3 className="text-blue-600" size={20} /> : <UserPlus className="text-blue-600" size={20} />}
+            {patient ? <Edit3 className="text-primary-600" size={20} /> : <UserPlus className="text-primary-600" size={20} />}
             {patient ? 'Editar Cadastro' : 'Novo Cadastro A.I.H'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
@@ -188,7 +197,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
               </label>
               <input
                 {...register('name')}
-                className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-semibold outline-none ${errors.name ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:ring-2 focus:ring-blue-500'}`}
+                className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-semibold outline-none ${errors.name ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:ring-2 focus:ring-primary-500'}`}
                 placeholder="Ex: João Silva"
               />
               {errors.name && <p className="text-red-500 text-xs mt-1 font-bold flex items-center gap-1"><AlertCircle size={12} /> {errors.name.message}</p>}
@@ -203,7 +212,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
                   autoComplete="off"
                   {...register('cadSus')}
                   onChange={handleCadSusChange}
-                  className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-mono font-bold outline-none ${errors.cadSus ? 'border-red-300 bg-red-50 text-red-700' : 'border-slate-200 focus:ring-2 focus:ring-blue-500'}`}
+                  className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-mono font-bold outline-none ${errors.cadSus ? 'border-red-300 bg-red-50 text-red-700' : 'border-slate-200 focus:ring-2 focus:ring-primary-500'}`}
                   placeholder="000.000.000-00"
                 />
                 {errors.cadSus && <p className="text-red-500 text-[10px] mt-1 font-black flex items-center gap-1 leading-tight"><AlertCircle size={12} className="shrink-0" /> {errors.cadSus.message}</p>}
@@ -217,7 +226,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
                   autoComplete="off"
                   {...register('phone')}
                   onChange={handlePhoneChange}
-                  className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-bold outline-none ${errors.phone ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:ring-2 focus:ring-blue-500'}`}
+                  className={`w-full px-4 py-3.5 rounded-2xl border transition-all font-bold outline-none ${errors.phone ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:ring-2 focus:ring-primary-500'}`}
                   placeholder="(73) 98888-8888"
                 />
                 {errors.phone && <p className="text-red-500 text-xs mt-1 font-bold flex items-center gap-1"><AlertCircle size={12} /> {errors.phone.message}</p>}
@@ -262,11 +271,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
                 <div className="flex gap-2 mb-4">
                   <input
                     type="text"
-                    placeholder="Ex: 04.04.01.010-5"
+                    placeholder="00.00.00.000-0"
                     value={procedureCode}
-                    onChange={e => setProcedureCode(e.target.value)}
+                    onChange={handleProcedureCodeChange}
                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleLookupProcedure())}
-                    className="flex-1 px-4 py-3.5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                    className="flex-1 px-4 py-3.5 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm font-bold"
                   />
                   <button
                     type="button"
@@ -284,8 +293,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
                 <textarea
                   {...register('procedimento')}
                   rows={2}
-                  className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-sm"
-                  placeholder="Descrição da cirurgia ou procedimento..."
+                  className="w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all font-bold text-sm"
+                  placeholder="Código - Nome do procedimento aparecerá aqui..."
                 />
               </div>
 
@@ -339,9 +348,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Código</label>
                 <input
                   type="text"
-                  value={newCode}
-                  onChange={e => setNewCode(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                  value={applyProcedureMask(newCode)}
+                  onChange={e => setNewCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="00.00.00.000-0"
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-primary-500 outline-none transition-all font-bold text-slate-800"
                 />
               </div>
               <div>

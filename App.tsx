@@ -111,11 +111,11 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen pb-12 bg-slate-50">
       {/* Header Gov Style */}
-      <header className="bg-blue-700 shadow-xl border-b-4 border-yellow-400">
+      <header className="bg-primary-700 shadow-xl border-b-4 border-yellow-400">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="bg-white p-2.5 rounded-2xl shadow-inner">
-              <ShieldCheck className="text-blue-700" size={32} />
+              <ShieldCheck className="text-primary-700" size={32} />
             </div>
             <div className="text-white">
               <h1 className="text-2xl font-black leading-tight tracking-tight">Entrega de Documentos A.I.H</h1>
@@ -125,7 +125,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-6">
             <div className="hidden lg:block text-right mr-4">
               <p className="text-white font-bold text-sm">Setor de Cirurgias Eletivas</p>
-              <p className="text-blue-100 text-xs">Atendimento: 07h às 13h</p>
+              <p className="text-primary-100 text-xs">Atendimento: 07h às 13h</p>
             </div>
           </div>
         </div>
@@ -136,18 +136,18 @@ const App: React.FC = () => {
           <div className="space-y-3">
             <label className="text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Localizar Paciente (Nome ou CadSUS)</label>
             <div className="relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={24} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors" size={24} />
               <input
                 type="text"
                 placeholder="Ex: João Silva ou 7000..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-14 pr-16 py-5 bg-white rounded-3xl border-2 border-transparent shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-xl font-bold placeholder:text-slate-300"
+                className="w-full pl-14 pr-16 py-5 bg-white rounded-3xl border-2 border-transparent shadow-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 outline-none transition-all text-xl font-bold placeholder:text-slate-300"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                   title="Limpar pesquisa"
                 >
                   <X size={24} />
@@ -159,9 +159,9 @@ const App: React.FC = () => {
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black text-slate-800 flex items-center gap-3">
-            <LayoutGrid className="text-blue-600" size={24} />
+            <LayoutGrid className="text-primary-600" size={24} />
             {searchTerm ? 'Resultados da Pesquisa' : 'Cadastros Recentes'}
-            <span className="bg-blue-100 text-blue-700 text-xs font-black py-1.5 px-3.5 rounded-full">
+            <span className="bg-primary-100 text-primary-700 text-xs font-black py-1.5 px-3.5 rounded-full">
               {filteredPatients.length}
             </span>
           </h2>
@@ -173,11 +173,11 @@ const App: React.FC = () => {
               {filteredPatients.map(patient => (
                 <div
                   key={patient.id}
-                  className="bg-slate-50 rounded-2xl p-5 border border-transparent hover:border-blue-200 hover:bg-white hover:shadow-md transition-all group flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="bg-slate-50 rounded-2xl p-5 border border-transparent hover:border-primary-200 hover:bg-white hover:shadow-md transition-all group flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-blue-50 transition-colors shrink-0">
-                      <Users className="text-slate-400 group-hover:text-blue-600" size={24} />
+                    <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-primary-50 transition-colors shrink-0">
+                      <Users className="text-slate-400 group-hover:text-primary-600" size={24} />
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-slate-800 tracking-tight">{patient.name}</h3>
@@ -197,14 +197,14 @@ const App: React.FC = () => {
                   <div className="flex items-center gap-2 mt-2 md:mt-0">
                     <button
                       onClick={() => { setAutoOpenDocConfig(null); setSelectedPatientForDoc(patient); }}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-black text-xs hover:bg-blue-600 hover:text-white transition-all border border-blue-100"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-xl font-black text-xs hover:bg-primary-600 hover:text-white transition-all border border-primary-100"
                     >
                       <FileText size={16} />
                       Comprovante
                     </button>
                     <button
                       onClick={() => { setEditingPatient(patient); setIsFormOpen(true); }}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                      className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                     >
                       <Edit3 size={18} />
                     </button>
@@ -227,7 +227,7 @@ const App: React.FC = () => {
             <h3 className="text-3xl font-black text-slate-700 mb-4">Cadastro não localizado</h3>
             <button
               onClick={() => { setEditingPatient(undefined); setIsFormOpen(true); }}
-              className="flex items-center gap-3 px-12 py-5 bg-blue-600 text-white rounded-3xl font-black text-lg shadow-2xl hover:scale-105 transition-all"
+              className="flex items-center gap-3 px-12 py-5 bg-primary-600 text-white rounded-3xl font-black text-lg shadow-2xl hover:scale-105 transition-all"
             >
               <Plus size={24} /> Criar Novo Cadastro
             </button>

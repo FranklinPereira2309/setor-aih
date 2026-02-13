@@ -78,3 +78,11 @@ export const validateMobilePhone = (phone: string): { isValid: boolean, formatte
 
   return { isValid: true, formatted };
 };
+export const applyProcedureMask = (value: string): string => {
+  const v = value.replace(/\D/g, '').substring(0, 10);
+  return v
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1})/, '$1-$2');
+};

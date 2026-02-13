@@ -6,6 +6,7 @@ import { X, Printer, Download, FileText, Loader2, ClipboardList, MapPin, Calenda
 import { procedimentoService } from '../services/procedimentoService';
 import { Procedimento } from '../types';
 import NotificationModal from './NotificationModal';
+import { applyProcedureMask } from '../services/validationService';
 
 interface DocumentModalProps {
   patient: Patient;
@@ -75,13 +76,15 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
   const handleLookupProcedure = async () => {
     if (!procedureCode.trim()) return;
 
+    const cleanCode = procedureCode.replace(/\D/g, '');
     setIsSearchingCode(true);
     try {
-      const proc = await procedimentoService.getByCode(procedureCode);
+      const proc = await procedimentoService.getByCode(cleanCode);
       if (proc) {
-        setConfig(prev => ({ ...prev, procedimento: proc.description }));
+        const masked = applyProcedureMask(cleanCode);
+        setConfig(prev => ({ ...prev, procedimento: `${masked} - ${proc.description}` }));
       } else {
-        setNewCode(procedureCode);
+        setNewCode(cleanCode);
         setNewDescription('');
         setShowRegisterModal(true);
       }
@@ -95,14 +98,16 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
   const handleSaveNewProcedure = async () => {
     if (!newCode || !newDescription) return;
 
+    const cleanCode = newCode.replace(/\D/g, '');
     try {
       const proc = await procedimentoService.create({
-        code: newCode,
+        code: cleanCode,
         description: newDescription
       });
       if (proc) {
-        setConfig(prev => ({ ...prev, procedimento: proc.description }));
-        setProcedureCode(newCode);
+        const masked = applyProcedureMask(cleanCode);
+        setConfig(prev => ({ ...prev, procedimento: `${masked} - ${proc.description}` }));
+        setProcedureCode(masked);
         setShowRegisterModal(false);
       }
     } catch (err) {
@@ -145,7 +150,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
         {/* Header */}
         <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-100">
+            <div className="bg-primary-600 p-2 rounded-xl shadow-lg shadow-primary-100">
               <FileText className="text-white" size={24} />
             </div>
             <div>
@@ -167,21 +172,21 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
             <div className="space-y-6 flex-1">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-tighter flex items-center gap-2">
-                  <Hash size={14} className="text-blue-500" /> Código do Procedimento
+                  <Hash size={14} className="text-primary-500" /> Código do Procedimento
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Ex: 04.04.01.010-5"
+                    placeholder="00.00.00.000-0"
                     value={procedureCode}
-                    onChange={e => setProcedureCode(e.target.value)}
+                    onChange={e => setProcedureCode(applyProcedureMask(e.target.value))}
                     onKeyDown={e => e.key === 'Enter' && handleLookupProcedure()}
-                    className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                    className="flex-1 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm font-bold"
                   />
                   <button
                     onClick={handleLookupProcedure}
                     disabled={isSearchingCode}
-                    className="px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="px-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
                   >
                     {isSearchingCode ? <Loader2 size={18} className="animate-spin" /> : <SearchIcon size={18} />}
                   </button>
@@ -194,8 +199,8 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                   value={config.procedimento}
                   onChange={e => setConfig({ ...config, procedimento: e.target.value })}
                   rows={4}
-                  placeholder="Descreva a cirurgia ou procedimento..."
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm leading-relaxed font-semibold"
+                  placeholder="Código - Nome do procedimento aparecerá aqui..."
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm leading-relaxed font-bold"
                 />
               </div>
 
@@ -210,9 +215,9 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                       name="origem"
                       checked={config.isItabuna}
                       onChange={() => setConfig({ ...config, isItabuna: true, isMPactuado: false })}
-                      className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                     />
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Itabuna (Sede)</span>
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-primary-600 transition-colors">Itabuna (Sede)</span>
                   </label>
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input
@@ -220,9 +225,9 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                       name="origem"
                       checked={config.isMPactuado}
                       onChange={() => setConfig({ ...config, isItabuna: false, isMPactuado: true })}
-                      className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                     />
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Município Pactuado</span>
+                    <span className="text-sm font-semibold text-slate-700 group-hover:text-primary-600 transition-colors">Município Pactuado</span>
                   </label>
                 </div>
               </div>
@@ -236,18 +241,18 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                     type="date"
                     value={config.deliveryDate}
                     onChange={e => setConfig({ ...config, deliveryDate: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm font-bold"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-2 uppercase flex items-center gap-2 tracking-tighter">
-                    <Calendar size={14} className="text-blue-500" /> Retorno
+                    <Calendar size={14} className="text-primary-500" /> Retorno
                   </label>
                   <input
                     type="date"
                     value={config.returnDate}
                     onChange={e => setConfig({ ...config, returnDate: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm font-bold"
                   />
                 </div>
               </div>
@@ -261,7 +266,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                     type="time"
                     value={config.printTime}
                     onChange={e => setConfig({ ...config, printTime: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm font-bold"
                   />
                 </div>
               </div>
@@ -287,7 +292,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
             <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl mb-4 p-3 flex justify-center gap-4 text-white shadow-2xl">
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold transition-all shadow-lg active:scale-95"
+                className="flex items-center gap-2 px-8 py-3 bg-primary-500 hover:bg-primary-600 rounded-xl font-bold transition-all shadow-lg active:scale-95"
               >
                 <Printer size={20} /> Imprimir Agora
               </button>
@@ -303,7 +308,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
               {isGenerating && (
                 <div className="absolute inset-0 z-10 bg-white/95 flex flex-col items-center justify-center animate-in fade-in duration-200">
                   <div className="bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center">
-                    <Loader2 className="animate-spin text-blue-600 mb-6" size={64} />
+                    <Loader2 className="animate-spin text-primary-600 mb-6" size={64} />
                     <p className="font-black text-slate-800 text-xl tracking-tight">Gerando Comprovante</p>
                     <p className="text-slate-400 text-[10px] font-black uppercase mt-2 tracking-widest">Aguarde o processamento</p>
                   </div>
@@ -330,7 +335,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
             <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Plus size={24} className="text-blue-600" /> Novo Procedimento
+                <Plus size={24} className="text-primary-600" /> Novo Procedimento
               </h2>
               <button onClick={() => setShowRegisterModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
                 <X size={20} className="text-slate-500" />
@@ -341,9 +346,10 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Código</label>
                 <input
                   type="text"
-                  value={newCode}
-                  onChange={e => setNewCode(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                  value={applyProcedureMask(newCode)}
+                  onChange={e => setNewCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="00.00.00.000-0"
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-primary-500 outline-none transition-all font-bold text-slate-800"
                 />
               </div>
               <div>

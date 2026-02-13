@@ -21,8 +21,8 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     if (!isOpen) return null;
 
     const Icon = type === 'confirm' ? HelpCircle : type === 'success' ? CheckCircle2 : AlertCircle;
-    const iconColor = type === 'confirm' ? 'text-blue-600' : type === 'success' ? 'text-green-600' : 'text-red-600';
-    const bgColor = type === 'confirm' ? 'bg-blue-50' : type === 'success' ? 'bg-green-50' : 'bg-red-50';
+    const iconColor = type === 'confirm' ? 'text-primary-600' : type === 'success' ? 'text-green-600' : 'text-red-600';
+    const bgColor = type === 'confirm' ? 'bg-primary-50' : type === 'success' ? 'bg-green-50' : 'bg-red-50';
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -46,7 +46,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
                         )}
                         <button
                             onClick={onConfirm}
-                            className={`flex-1 py-4 ${type === 'confirm' || type === 'success' ? 'bg-blue-600' : 'bg-red-600'} text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95`}
+                            className={`flex-1 py-4 ${type === 'confirm' || type === 'success' ? 'bg-primary-600' : 'bg-red-600'} text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95`}
                         >
                             {type === 'confirm' ? 'Confirmar' : 'Entendido'}
                         </button>
