@@ -15,9 +15,7 @@ import {
   CreditCard,
   Phone,
   ShieldCheck,
-  Settings,
   X,
-  Upload,
   Image as ImageIcon
 } from 'lucide-react';
 
@@ -45,7 +43,7 @@ const App: React.FC = () => {
     ).sort((a, b) => b.updatedAt - a.updatedAt);
   }, [patients, searchTerm]);
 
-  const handleSavePatient = (data: PatientFormData & { id?: string, extra?: Partial<DocumentConfig> }) => {
+  const handleSavePatient = async (data: PatientFormData & { id?: string, extra?: Partial<DocumentConfig> }) => {
     let savedPatient: Patient;
 
     if (data.id) {
@@ -56,7 +54,7 @@ const App: React.FC = () => {
         id: data.id,
         updatedAt: Date.now()
       };
-      storageService.updatePatient(savedPatient);
+      await storageService.updatePatient(savedPatient);
     } else {
       savedPatient = {
         name: data.name,
@@ -65,10 +63,10 @@ const App: React.FC = () => {
         id: Math.random().toString(36).substr(2, 9),
         updatedAt: Date.now()
       };
-      storageService.addPatient(savedPatient);
+      await storageService.addPatient(savedPatient);
     }
 
-    setPatients(storageService.getPatients());
+    setPatients([...storageService.getPatients()]);
     setIsFormOpen(false);
     setEditingPatient(undefined);
 
@@ -79,10 +77,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeletePatient = (id: string) => {
+  const handleDeletePatient = async (id: string) => {
     if (confirm('Deseja realmente excluir este cadastro?')) {
-      storageService.deletePatient(id);
-      setPatients(storageService.getPatients());
+      await storageService.deletePatient(id);
+      setPatients([...storageService.getPatients()]);
     }
   };
 
