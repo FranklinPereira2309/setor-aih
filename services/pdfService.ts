@@ -1,29 +1,25 @@
-
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { Patient, DocumentConfig } from '../types';
-import { storageService } from './storageService';
+import defaultLogoUrl from '../assets/prefeitura.jpg';
 
 /**
  * Gera um documento PDF A4 com duas vias A5 idênticas.
- * Otimizado para impressão no Windows 10/11 com suporte a logomarca personalizada.
+ * Otimizado para impressão no Windows 10/11 com suporte a logomarca oficial.
  */
 export const generatePatientDocument = async (patient: Patient, config: DocumentConfig): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // Tamanho A4 Exato
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  
-  const savedLogo = storageService.getLogo();
+
   let logoImage: any = null;
 
-  if (savedLogo) {
-    try {
-      const isPng = savedLogo.includes('image/png');
-      const logoBytes = Uint8Array.from(atob(savedLogo.split(',')[1]), c => c.charCodeAt(0));
-      logoImage = isPng ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
-    } catch (e) {
-      console.error('Erro ao processar logo para o PDF:', e);
-    }
+  try {
+    const response = await fetch(defaultLogoUrl);
+    const logoBytes = new Uint8Array(await response.arrayBuffer());
+    logoImage = await pdfDoc.embedJpg(logoBytes);
+  } catch (e) {
+    console.error('Erro ao carregar logomarca padrão:', e);
   }
 
   /**
@@ -35,7 +31,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     const viaHeight = 420.94;
     const margin = 30;
     const contentWidth = pageWidth - (margin * 2);
-    
+
     // 1. Desenhar Retângulo de Borda para a Via
     page.drawRectangle({
       x: margin - 10,
@@ -49,7 +45,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     // AJUSTE FINAL: Baixando o cabeçalho mais 7px (de 368 para 361) para ficar perfeito dentro da borda
     const startY = yOffset + 361;
     let textStartX = margin;
-    
+
     // 2. Cabeçalho com Logomarca (Lateralizada)
     if (logoImage) {
       const logoHeight = 45;
@@ -69,19 +65,19 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       'Departamento de Regulação e Controle e Avaliação do S.U.S.',
       'Setor de Autorizações de Internamento Hospitalar (A.I.H)'
     ];
-    
+
     let currentHeaderY = startY + 25;
     headerLines.forEach((line, idx) => {
       const fontSize = idx === 0 ? 10 : 8;
       const f = idx === 0 ? fontBold : font;
-      
+
       const xPos = logoImage ? textStartX : (pageWidth - f.widthOfTextAtSize(line, fontSize)) / 2;
-      
-      page.drawText(line, { 
-        x: xPos, 
-        y: currentHeaderY, 
-        size: fontSize, 
-        font: f 
+
+      page.drawText(line, {
+        x: xPos,
+        y: currentHeaderY,
+        size: fontSize,
+        font: f
       });
       currentHeaderY -= 11;
     });
@@ -89,11 +85,11 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     // 3. Título Principal
     const mainTitle = 'Comprovante de Entrega de Documentos no Setor de A.I.H';
     const titleWidth = fontBold.widthOfTextAtSize(mainTitle, 12);
-    page.drawText(mainTitle, { 
-      x: (pageWidth - titleWidth) / 2, 
-      y: startY - 35, 
-      size: 12, 
-      font: fontBold 
+    page.drawText(mainTitle, {
+      x: (pageWidth - titleWidth) / 2,
+      y: startY - 35,
+      size: 12,
+      font: fontBold
     });
 
     // 4. Dados do Paciente
@@ -115,29 +111,29 @@ export const generatePatientDocument = async (patient: Patient, config: Document
 
     // 6. Checkboxes (Origem) - Estilo Clean
     const cbY = dataY - 105;
-    
+
     // Itabuna
-    page.drawRectangle({ 
-      x: margin, 
-      y: cbY, 
-      width: 10, 
-      height: 10, 
-      borderWidth: 0.5, 
+    page.drawRectangle({
+      x: margin,
+      y: cbY,
+      width: 10,
+      height: 10,
+      borderWidth: 0.5,
       borderColor: rgb(0, 0, 0),
-      color: rgb(1, 1, 1) 
+      color: rgb(1, 1, 1)
     });
     if (config.isItabuna) page.drawText('X', { x: margin + 2, y: cbY + 2, size: 8, font: fontBold });
     page.drawText('ITABUNA', { x: margin + 15, y: cbY + 1, size: 10, font });
 
     // M. Pactuado
-    page.drawRectangle({ 
-      x: margin + 100, 
-      y: cbY, 
-      width: 10, 
-      height: 10, 
-      borderWidth: 0.5, 
+    page.drawRectangle({
+      x: margin + 100,
+      y: cbY,
+      width: 10,
+      height: 10,
+      borderWidth: 0.5,
       borderColor: rgb(0, 0, 0),
-      color: rgb(1, 1, 1) 
+      color: rgb(1, 1, 1)
     });
     if (config.isMPactuado) page.drawText('X', { x: margin + 102, y: cbY + 2, size: 8, font: fontBold });
     page.drawText('M. PACTUADO', { x: margin + 115, y: cbY + 1, size: 10, font });
@@ -203,7 +199,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
   }
 
   drawContent(420.94); // Via Superior
-  
+
   page.drawLine({
     start: { x: 0, y: 420.94 },
     end: { x: 595.28, y: 420.94 },

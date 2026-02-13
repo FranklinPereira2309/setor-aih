@@ -1,78 +1,97 @@
+import { createClient } from '@supabase/supabase-js';
 import { Patient } from '../types';
 
-const API_URL = 'http://localhost:3001/api/data';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-interface DB {
-  patients: Patient[];
-  logo: string | null;
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase credentials missing. Persistence will not work. Check .env.local');
 }
 
-let dbCache: DB = { patients: [], logo: null };
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const syncWithFile = async () => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dbCache)
-    });
-    return response.ok;
-  } catch (err) {
-    console.error('Failed to sync with file:', err);
-    return false;
-  }
-};
+let patientsCache: Patient[] = [];
 
 export const storageService = {
   loadData: async (): Promise<void> => {
     try {
-      const response = await fetch(API_URL);
-      if (response.ok) {
-        dbCache = await response.json();
-      }
+      const { data, error } = await supabase
+        .from('patients')
+        .select('*')
+        .order('updatedAt', { ascending: false });
+
+      if (error) throw error;
+      patientsCache = data || [];
     } catch (err) {
-      console.error('Failed to load data from file:', err);
+      console.error('Failed to load data from Supabase:', err);
     }
   },
 
   getPatients: (): Patient[] => {
-    return dbCache.patients;
+    return patientsCache;
   },
 
-  savePatients: (patients: Patient[]): void => {
-    dbCache.patients = patients;
-    syncWithFile();
-  },
-
-  addPatient: (patient: Patient): void => {
-    dbCache.patients.push(patient);
-    syncWithFile();
-  },
-
-  updatePatient: (updatedPatient: Patient): void => {
-    const index = dbCache.patients.findIndex(p => p.id === updatedPatient.id);
-    if (index !== -1) {
-      dbCache.patients[index] = updatedPatient;
-      syncWithFile();
+  savePatients: async (patients: Patient[]): Promise<void> => {
+    // This is less efficient than individual mutations but used to match existing UI logic
+    // In a real app, we'd use separate insert/update/delete
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .upsert(patients);
+      if (error) throw error;
+      patientsCache = patients;
+    } catch (err) {
+      console.error('Failed to save patients to Supabase:', err);
     }
   },
 
-  deletePatient: (id: string): void => {
-    dbCache.patients = dbCache.patients.filter(p => p.id !== id);
-    syncWithFile();
+  addPatient: async (patient: Patient): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .insert([patient]);
+
+      if (error) throw error;
+      patientsCache = [patient, ...patientsCache];
+    } catch (err) {
+      console.error('Failed to add patient to Supabase:', err);
+    }
   },
 
-  saveLogo: (base64: string): void => {
-    dbCache.logo = base64;
-    syncWithFile();
+  updatePatient: async (updatedPatient: Patient): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update(updatedPatient)
+        .eq('id', updatedPatient.id);
+
+      if (error) throw error;
+
+      const index = patientsCache.findIndex(p => p.id === updatedPatient.id);
+      if (index !== -1) {
+        patientsCache[index] = updatedPatient;
+      }
+    } catch (err) {
+      console.error('Failed to update patient on Supabase:', err);
+    }
+  },
+
+  deletePatient: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      patientsCache = patientsCache.filter(p => p.id !== id);
+    } catch (err) {
+      console.error('Failed to delete patient from Supabase:', err);
+    }
   },
 
   getLogo: (): string | null => {
-    return dbCache.logo;
-  },
-
-  clearLogo: (): void => {
-    dbCache.logo = null;
-    syncWithFile();
+    // Logo is now a static asset, keeping signature for compatibility if needed
+    return null;
   }
 };

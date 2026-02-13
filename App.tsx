@@ -26,16 +26,13 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedPatientForDoc, setSelectedPatientForDoc] = useState<Patient | null>(null);
   const [autoOpenDocConfig, setAutoOpenDocConfig] = useState<Partial<DocumentConfig> | null>(null);
-  const [currentLogo, setCurrentLogo] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
       await storageService.loadData();
       setPatients(storageService.getPatients());
-      setCurrentLogo(storageService.getLogo());
     };
     init();
   }, []);
@@ -89,23 +86,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        storageService.saveLogo(base64String);
-        setCurrentLogo(base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleClearLogo = () => {
-    storageService.clearLogo();
-    setCurrentLogo(null);
-  };
 
   return (
     <div className="min-h-screen pb-12 bg-slate-50">
@@ -126,13 +106,6 @@ const App: React.FC = () => {
               <p className="text-white font-bold text-sm">Setor de Cirurgias Eletivas</p>
               <p className="text-blue-100 text-xs">Atendimento: 07h às 13h</p>
             </div>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition-all shadow-lg active:scale-95"
-              title="Configurações do Sistema"
-            >
-              <Settings size={24} />
-            </button>
           </div>
         </div>
       </header>
@@ -241,57 +214,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Settings Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Settings size={20} /> Configurações
-              </h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                <X size={20} className="text-slate-500" />
-              </button>
-            </div>
-            <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-xs font-black text-slate-500 mb-4 uppercase tracking-widest">Logomarca do Formulário</label>
-                {currentLogo ? (
-                  <div className="space-y-4">
-                    <div className="relative w-full aspect-video bg-slate-50 rounded-2xl border-2 border-slate-100 flex items-center justify-center p-4">
-                      <img src={currentLogo} alt="Logo Atual" className="max-h-full max-w-full object-contain" />
-                      <button
-                        onClick={handleClearLogo}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg hover:bg-red-600 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                    <p className="text-xs text-center text-slate-400 font-medium">Esta imagem aparecerá no cabeçalho dos comprovantes impressos.</p>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-slate-300 rounded-3xl bg-slate-50 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <div className="bg-white p-4 rounded-2xl shadow-sm group-hover:scale-110 transition-transform mb-3">
-                        <Upload className="text-slate-400 group-hover:text-blue-500" size={32} />
-                      </div>
-                      <p className="mb-2 text-sm text-slate-700 font-bold">Clique para enviar</p>
-                      <p className="text-xs text-slate-500 font-medium uppercase tracking-tighter">PNG ou JPG (Formatos Oficiais)</p>
-                    </div>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                  </label>
-                )}
-              </div>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-black transition-all"
-              >
-                Concluído
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isFormOpen && (
         <PatientForm
