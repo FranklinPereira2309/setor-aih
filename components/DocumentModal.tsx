@@ -13,13 +13,20 @@ interface DocumentModalProps {
 const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, onClose }) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
-  
-  const [config, setConfig] = useState<DocumentConfig>({
-    procedimento: initialConfig?.procedimento || '',
-    isItabuna: initialConfig?.isItabuna ?? true,
-    isMPactuado: initialConfig?.isMPactuado ?? false,
-    deliveryDate: new Date().toISOString().split('T')[0],
-    printTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+
+  const [config, setConfig] = useState<DocumentConfig>(() => {
+    const today = new Date();
+    const returnDate = new Date(today);
+    returnDate.setDate(today.getDate() + 15);
+
+    return {
+      procedimento: initialConfig?.procedimento || '',
+      isItabuna: initialConfig?.isItabuna ?? true,
+      isMPactuado: initialConfig?.isMPactuado ?? false,
+      deliveryDate: new Date().toISOString().split('T')[0],
+      returnDate: returnDate.toISOString().split('T')[0],
+      printTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    };
   });
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -30,12 +37,12 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
       // Feedback visual de carregamento para o usuário
       await new Promise(resolve => setTimeout(resolve, 400));
       const bytes = await generatePatientDocument(patient, config);
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = new Blob([bytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      
+
       // Limpeza de memória da URL anterior
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-      
+
       setPdfUrl(url);
     } catch (error) {
       console.error('Falha ao gerar PDF:', error);
@@ -96,9 +103,9 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
             <div className="space-y-6 flex-1">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-tighter">Descrição do Procedimento</label>
-                <textarea 
+                <textarea
                   value={config.procedimento}
-                  onChange={e => setConfig({...config, procedimento: e.target.value})}
+                  onChange={e => setConfig({ ...config, procedimento: e.target.value })}
                   rows={4}
                   placeholder="Descreva a cirurgia ou procedimento..."
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm leading-relaxed font-semibold"
@@ -107,25 +114,25 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-3 uppercase flex items-center gap-2 tracking-tighter">
-                   <MapPin size={14} /> Localidade / Origem
+                  <MapPin size={14} /> Localidade / Origem
                 </label>
                 <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                   <label className="flex items-center gap-3 cursor-pointer group">
-                    <input 
+                    <input
                       type="radio"
                       name="origem"
                       checked={config.isItabuna}
-                      onChange={() => setConfig({...config, isItabuna: true, isMPactuado: false})}
+                      onChange={() => setConfig({ ...config, isItabuna: true, isMPactuado: false })}
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                     <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Itabuna (Sede)</span>
                   </label>
                   <label className="flex items-center gap-3 cursor-pointer group">
-                    <input 
+                    <input
                       type="radio"
                       name="origem"
                       checked={config.isMPactuado}
-                      onChange={() => setConfig({...config, isItabuna: false, isMPactuado: true})}
+                      onChange={() => setConfig({ ...config, isItabuna: false, isMPactuado: true })}
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                     <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition-colors">Município Pactuado</span>
@@ -138,21 +145,35 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                   <label className="block text-xs font-bold text-slate-700 mb-2 uppercase flex items-center gap-2 tracking-tighter">
                     <Calendar size={14} /> Data
                   </label>
-                  <input 
+                  <input
                     type="date"
                     value={config.deliveryDate}
-                    onChange={e => setConfig({...config, deliveryDate: e.target.value})}
+                    onChange={e => setConfig({ ...config, deliveryDate: e.target.value })}
                     className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-2 uppercase flex items-center gap-2 tracking-tighter">
+                    <Calendar size={14} className="text-blue-500" /> Retorno
+                  </label>
+                  <input
+                    type="date"
+                    value={config.returnDate}
+                    onChange={e => setConfig({ ...config, returnDate: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-2 uppercase flex items-center gap-2 tracking-tighter">
                     <Clock size={14} /> Horário
                   </label>
-                  <input 
+                  <input
                     type="time"
                     value={config.printTime}
-                    onChange={e => setConfig({...config, printTime: e.target.value})}
+                    onChange={e => setConfig({ ...config, printTime: e.target.value })}
                     className="w-full px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-bold"
                   />
                 </div>
@@ -160,7 +181,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
             </div>
 
             <div className="pt-6 border-t border-slate-100 mt-6">
-              <button 
+              <button
                 onClick={createPdf}
                 disabled={isGenerating}
                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50"
@@ -177,13 +198,13 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
           {/* Preview Panel */}
           <div className="flex-1 bg-slate-200 relative flex flex-col p-4">
             <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl mb-4 p-3 flex justify-center gap-4 text-white shadow-2xl">
-              <button 
+              <button
                 onClick={handlePrint}
                 className="flex items-center gap-2 px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold transition-all shadow-lg active:scale-95"
               >
                 <Printer size={20} /> Imprimir Agora
               </button>
-              <button 
+              <button
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-8 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold transition-all shadow-lg active:scale-95"
               >
@@ -202,7 +223,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                 </div>
               )}
               {pdfUrl && (
-                <iframe 
+                <iframe
                   ref={iframeRef}
                   src={`${pdfUrl}#toolbar=0&navpanes=0&view=FitH`}
                   className="w-full h-full border-none"

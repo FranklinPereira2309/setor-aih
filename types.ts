@@ -12,6 +12,7 @@ export interface DocumentConfig {
   isItabuna: boolean;
   isMPactuado: boolean;
   deliveryDate: string;
+  returnDate: string;
   printTime: string;
 }
 

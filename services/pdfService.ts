@@ -140,33 +140,36 @@ export const generatePatientDocument = async (patient: Patient, config: Document
 
     // 7. Datas e Horários
     const dateStr = new Date(config.deliveryDate + 'T00:00:00').toLocaleDateString('pt-BR');
-    page.drawText(`DATA DA ENTREGA: ${dateStr}`, { x: margin + 250, y: cbY + 1, size: 10, font: fontBold });
-    page.drawText(`HORÁRIO: ${config.printTime}`, { x: margin + 250, y: cbY - 14, size: 9, font });
-
+    const returnDateStr = new Date(config.returnDate + 'T00:00:00').toLocaleDateString('pt-BR');
+    const deliveryText = `DATA DA ENTREGA: ${dateStr} `;
+    const timeText = ` - HORÁRIO: ${config.printTime}`;
+    page.drawText(deliveryText, { x: margin + 250, y: cbY + 1, size: 10, font: fontBold });
+    const deliveryWidth = fontBold.widthOfTextAtSize(deliveryText, 10);
+    page.drawText(timeText, { x: margin + 250 + deliveryWidth, y: cbY + 1, size: 10, font });
+    page.drawText(`DATA DE RETORNO: ${returnDateStr}`, { x: margin + 250, y: cbY - 25, size: 10, font: fontBold });
     // 8. Área de Assinatura
     const sigY = yOffset + 130;
     const sigLineWidth = 250;
     const sigLineX = (pageWidth - sigLineWidth) / 2;
     page.drawLine({ start: { x: sigLineX, y: sigY }, end: { x: sigLineX + sigLineWidth, y: sigY }, thickness: 0.5 });
     page.drawText('Equipe Administrativa', { x: sigLineX + 75, y: sigY - 12, size: 9, font: fontBold });
-    page.drawText('(Setor A.I.H de Cirurgias Eletivas)', { x: sigLineX + 55, y: sigY - 24, size: 8, font });
+    page.drawText('(Setor A.I.H de Cirurgias Eletivas)', { x: sigLineX + 55, y: sigY - 30, size: 8, font });
 
     // 9. Notas de Rodapé
-    const notesY = yOffset + 80;
+    const notesY = yOffset + 60;
     const notes = [
-      'a- Comparecer pessoalmente - a partir das 10h (excepcionalmente) - da quarta-feira ou sexta-feira seguinte, após entrega da documentação, para saber se já está autorizada a cirurgia eletiva.',
-      'b- Ressaltamos que o prazo para dar retorno ao paciente informado se foi ou não autorizado o procedimento cirúrgico pelo médico autorizador, é de 15 (quinze) dias após recebimento da documentação, pertinente à cirurgia eletiva em questão, no setor de A.I.H.',
-      'c- Guarde este comprovante e traga-o quando for pegar a autorização dentro do horário de atendimento das 07h00 às 13h00.'
+      'a- Comparecer pessoalmente - a partir das 10h (excepcionalmente).',
+      'b- Guarde este comprovante e traga-o quando for pegar a autorização dentro do horário de atendimento.'
     ];
 
     let currentNoteY = notesY;
     notes.forEach(note => {
-      const wrappedText = wrapText(note, contentWidth, 7, font);
+      const wrappedText = wrapText(note, contentWidth, 10, font);
       wrappedText.forEach(line => {
-        page.drawText(line, { x: margin, y: currentNoteY, size: 7, font });
-        currentNoteY -= 8;
+        page.drawText(line, { x: margin, y: currentNoteY, size: 10, font });
+        currentNoteY -= 12;
       });
-      currentNoteY -= 2;
+      currentNoteY -= 4;
     });
 
     // 10. Identificação da Via
