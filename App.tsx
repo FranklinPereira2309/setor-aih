@@ -257,8 +257,7 @@ const App: React.FC = () => {
       <footer className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white/80 backdrop-blur-md py-4 px-6 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            {/* <ImageIcon className="text-blue-600" size={20} /> */}
-            <img src="/assets/logo-fransoft-developer.png" alt="Logo Fransoft" className="h-12 w-auto object-contain" />
+            <ImageIcon className="text-blue-600" size={20} />
 
             <span className="font-black text-slate-900 tracking-tight text-sm">Fransoft Developer®</span>
             <span className="text-slate-400 text-[10px] font-bold border-l pl-3 ml-2">fransoft.developer.2026@gmail.com</span>
