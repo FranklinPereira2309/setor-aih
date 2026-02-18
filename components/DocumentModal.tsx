@@ -358,12 +358,12 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
                   value={newDescription}
                   onChange={e => setNewDescription(e.target.value.toUpperCase())}
                   rows={3}
-                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-800"
+                  className="w-full px-5 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-primary-500 outline-none transition-all font-bold text-slate-800"
                 />
               </div>
               <button
                 onClick={handleSaveNewProcedure}
-                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-200"
+                className="w-full py-5 bg-primary-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary-200"
               >
                 <Save size={20} /> Salvar e Usar
               </button>
