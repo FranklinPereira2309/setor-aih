@@ -43,5 +43,13 @@ export const authService = {
      */
     logout(): void {
         localStorage.removeItem('auth_user');
+    },
+
+    /**
+     * Retorna os dados do usuário logado
+     */
+    getUser(): { id: string; usuario: string } | null {
+        const user = localStorage.getItem('auth_user');
+        return user ? JSON.parse(user) : null;
     }
 };

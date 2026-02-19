@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, User, Lock, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { LogIn, User, Lock, Loader2, AlertCircle, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import { authService } from '../services/authService';
 
 interface LoginProps {
@@ -109,7 +109,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
                     <div className="mt-10 pt-8 border-t border-slate-100 text-center">
                         <div className="flex flex-col items-center gap-2">
-                            <img src="/assets/logo-fransoft-developer.png" alt="Fransoft Logo" className="h-8 w-auto object-contain opacity-40 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" />
+                            <ImageIcon className="text-blue-600" size={24} />
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fransoft Developer Group</p>
                         </div>
                     </div>

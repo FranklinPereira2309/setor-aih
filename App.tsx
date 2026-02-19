@@ -7,21 +7,7 @@ import DocumentModal from './components/DocumentModal';
 import NotificationModal from './components/NotificationModal';
 import Login from './components/Login';
 import { authService } from './services/authService';
-import {
-  Search,
-  Users,
-  Trash2,
-  Edit3,
-  FileText,
-  Plus,
-  LayoutGrid,
-  CreditCard,
-  Phone,
-  ShieldCheck,
-  X,
-  Image as ImageIcon,
-  LogOut
-} from 'lucide-react';
+import { ShieldCheck, Search, X, Users, Edit3, LayoutGrid, FileText, Plus, LogOut, User as UserIcon, Trash2, CreditCard, Phone, Image as ImageIcon } from 'lucide-react';
 
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -153,9 +139,12 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="hidden lg:block text-right mr-4 border-r border-primary-600/50 pr-6">
-              <p className="text-white font-bold text-sm">Setor de Cirurgias Eletivas</p>
-              <p className="text-primary-100 text-xs">Atendimento: 07h às 13h</p>
+            <div className="hidden lg:flex flex-col text-right mr-4 border-r border-primary-600/50 pr-6">
+              <div className="flex items-center gap-2 justify-end text-white mb-0.5">
+                <UserIcon size={14} className="text-primary-200" />
+                <span className="font-black text-xs uppercase tracking-wider">{authService.getUser()?.usuario}</span>
+              </div>
+              <p className="text-primary-100 text-[10px] font-bold uppercase tracking-tighter opacity-80">Setor de Cirurgias Eletivas</p>
             </div>
             <button
               onClick={handleLogout}
