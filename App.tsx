@@ -5,6 +5,8 @@ import { storageService } from './services/storageService';
 import PatientForm from './components/PatientForm';
 import DocumentModal from './components/DocumentModal';
 import NotificationModal from './components/NotificationModal';
+import Login from './components/Login';
+import { authService } from './services/authService';
 import {
   Search,
   Users,
@@ -17,7 +19,8 @@ import {
   Phone,
   ShieldCheck,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  LogOut
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -27,6 +30,8 @@ const App: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedPatientForDoc, setSelectedPatientForDoc] = useState<Patient | null>(null);
   const [autoOpenDocConfig, setAutoOpenDocConfig] = useState<Partial<DocumentConfig> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // State for Custom Modal
   const [notification, setNotification] = useState<{
@@ -34,7 +39,7 @@ const App: React.FC = () => {
     title: string;
     message: string;
     type: 'alert' | 'confirm' | 'success';
-    onConfirm: () => void;
+    onConfirm?: () => void;
   }>({
     isOpen: false,
     title: '',
@@ -44,12 +49,35 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const init = async () => {
-      await storageService.loadData();
-      setPatients(storageService.getPatients());
+    const checkAuth = () => {
+      const auth = authService.isAuthenticated();
+      setIsAuthenticated(auth);
+      if (auth) {
+        loadPatients();
+      } else {
+        setIsLoading(false);
+      }
     };
-    init();
+
+    checkAuth();
   }, []);
+
+  const loadPatients = async () => {
+    setIsLoading(true);
+    await storageService.loadData();
+    setPatients(storageService.getPatients());
+    setIsLoading(false);
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    loadPatients();
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+  };
 
   const filteredPatients = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -107,6 +135,9 @@ const App: React.FC = () => {
     });
   };
 
+  if (!isAuthenticated && !isLoading) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="min-h-screen pb-12 bg-slate-50">
@@ -119,14 +150,21 @@ const App: React.FC = () => {
             </div>
             <div className="text-white">
               <h1 className="text-2xl font-black leading-tight tracking-tight">Entrega de Documentos A.I.H</h1>
-              <p className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-90">Secretaria Municipal de Saúde - Itabuna</p>
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="hidden lg:block text-right mr-4">
+            <div className="hidden lg:block text-right mr-4 border-r border-primary-600/50 pr-6">
               <p className="text-white font-bold text-sm">Setor de Cirurgias Eletivas</p>
               <p className="text-primary-100 text-xs">Atendimento: 07h às 13h</p>
             </div>
+            <button
+              onClick={handleLogout}
+              className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-2xl border border-white/10 transition-all font-black text-xs text-white uppercase tracking-widest"
+              title="Sair do sistema"
+            >
+              <LogOut size={18} className="text-primary-100 group-hover:text-white transition-colors" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
           </div>
         </div>
       </header>
