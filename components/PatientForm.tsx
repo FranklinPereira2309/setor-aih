@@ -29,7 +29,10 @@ import NotificationModal from './NotificationModal';
 // Schema de Validação com Zod
 const patientSchema = z.object({
   name: z.string().min(3, 'Nome muito curto'),
-  phone: z.string().refine((val) => validateMobilePhone(val).isValid, {
+  phone: z.string().optional().refine((val) => {
+    if (!val || val.replace(/\\D/g, '') === '') return true;
+    return validateMobilePhone(val).isValid;
+  }, {
     message: 'Telefone inválido. Deve ser no formato (DD) 9XXXX-XXXX'
   }),
   cadSus: z.string().refine((val) => {
@@ -165,6 +168,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
   const onSubmit = (data: PatientFormValues) => {
     const { procedimento, origem, ...patientData } = data;
 
+    if (!patientData.phone || patientData.phone.replace(/\\D/g, '') === '') {
+      patientData.phone = '(00) 00000-0000';
+    }
+
     const extra: Partial<DocumentConfig> = !patient ? {
       procedimento: procedimento || '',
       isItabuna: origem === 'itabuna',
@@ -220,7 +227,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
 
               <div>
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-tight">
-                  <Phone size={14} /> Telefone *
+                  <Phone size={14} /> Telefone
                 </label>
                 <input
                   autoComplete="off"
