@@ -77,12 +77,16 @@ const App: React.FC = () => {
     let savedPatient: Patient;
 
     if (data.id) {
+      const existing = patients.find(p => p.id === data.id);
       savedPatient = {
         name: data.name,
         phone: data.phone,
         cadSus: data.cadSus,
         id: data.id,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        lastProcedimento: existing?.lastProcedimento,
+        isItabuna: existing?.isItabuna,
+        isMPactuado: existing?.isMPactuado,
       };
       await storageService.updatePatient(savedPatient);
     } else {
@@ -91,7 +95,10 @@ const App: React.FC = () => {
         phone: data.phone,
         cadSus: data.cadSus,
         id: Math.random().toString(36).substr(2, 9),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        lastProcedimento: data.extra?.procedimento,
+        isItabuna: data.extra?.isItabuna,
+        isMPactuado: data.extra?.isMPactuado,
       };
       await storageService.addPatient(savedPatient);
     }
@@ -277,6 +284,11 @@ const App: React.FC = () => {
           patient={selectedPatientForDoc}
           initialConfig={autoOpenDocConfig || undefined}
           onClose={() => { setSelectedPatientForDoc(null); setAutoOpenDocConfig(null); }}
+          onUpdatePatient={async (updatedPatient) => {
+            await storageService.updatePatient(updatedPatient);
+            setPatients([...storageService.getPatients()]);
+            setSelectedPatientForDoc(updatedPatient);
+          }}
         />
       )}
 

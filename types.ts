@@ -5,6 +5,9 @@ export interface Patient {
   phone: string;
   cadSus: string; // 15 digits
   updatedAt: number;
+  lastProcedimento?: string;
+  isItabuna?: boolean;
+  isMPactuado?: boolean;
 }
 
 export interface DocumentConfig {

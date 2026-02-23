@@ -12,16 +12,22 @@ interface DocumentModalProps {
   patient: Patient;
   initialConfig?: Partial<DocumentConfig>;
   onClose: () => void;
+  onUpdatePatient?: (updatedPatient: Patient) => void;
 }
 
-const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, onClose }) => {
+const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, onClose, onUpdatePatient }) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [isSearchingCode, setIsSearchingCode] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [newCode, setNewCode] = useState('');
   const [newDescription, setNewDescription] = useState('');
-  const [procedureCode, setProcedureCode] = useState('');
+
+  const [procedureCode, setProcedureCode] = useState(() => {
+    const proc = initialConfig?.procedimento || patient.lastProcedimento || '';
+    const match = proc.split(' - ')[0];
+    return match ? match : '';
+  });
 
   // State for Custom Modal
   const [notification, setNotification] = useState<{
@@ -42,9 +48,9 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
     returnDate.setDate(today.getDate() + 15);
 
     return {
-      procedimento: initialConfig?.procedimento || '',
-      isItabuna: initialConfig?.isItabuna ?? true,
-      isMPactuado: initialConfig?.isMPactuado ?? false,
+      procedimento: initialConfig?.procedimento || patient.lastProcedimento || '',
+      isItabuna: initialConfig?.isItabuna ?? patient.isItabuna ?? true,
+      isMPactuado: initialConfig?.isMPactuado ?? patient.isMPactuado ?? false,
       deliveryDate: new Date().toISOString().split('T')[0],
       returnDate: returnDate.toISOString().split('T')[0],
       printTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -56,6 +62,17 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
   const createPdf = async () => {
     setIsGenerating(true);
     try {
+      if (onUpdatePatient) {
+        if (patient.lastProcedimento !== config.procedimento || patient.isItabuna !== config.isItabuna || patient.isMPactuado !== config.isMPactuado) {
+          onUpdatePatient({
+            ...patient,
+            lastProcedimento: config.procedimento,
+            isItabuna: config.isItabuna,
+            isMPactuado: config.isMPactuado,
+          });
+        }
+      }
+
       // Feedback visual de carregamento para o usuário
       await new Promise(resolve => setTimeout(resolve, 400));
       const bytes = await generatePatientDocument(patient, config);
