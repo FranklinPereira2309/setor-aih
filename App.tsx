@@ -18,8 +18,6 @@ const App: React.FC = () => {
   const [autoOpenDocConfig, setAutoOpenDocConfig] = useState<Partial<DocumentConfig> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // State for Custom Modal
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     title: string;
@@ -106,8 +104,6 @@ const App: React.FC = () => {
     setPatients([...storageService.getPatients()]);
     setIsFormOpen(false);
     setEditingPatient(undefined);
-
-    // Se houver dados extras de procedimento/origem, abre o modal de documento automaticamente
     if (data.extra) {
       setAutoOpenDocConfig(data.extra);
       setSelectedPatientForDoc(savedPatient);
@@ -134,7 +130,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-12 bg-slate-50">
-      {/* Header Gov Style */}
+      {}
       <header className="bg-primary-700 shadow-xl border-b-4 border-yellow-400">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -292,7 +288,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Final Updated Footer - Fixed bottom */}
+      {}
       <footer className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white/80 backdrop-blur-md py-4 px-6 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">

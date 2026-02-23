@@ -2,13 +2,10 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { Patient, DocumentConfig } from '../types';
 import defaultLogoUrl from '../assets/prefeitura.jpg';
 
-/**
- * Gera um documento PDF A4 com duas vias A5 idênticas.
- * Otimizado para impressão no Windows 10/11 com suporte a logomarca oficial.
- */
+
 export const generatePatientDocument = async (patient: Patient, config: DocumentConfig): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595.28, 841.89]); // Tamanho A4 Exato
+  const page = pdfDoc.addPage([595.28, 841.89]); 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
@@ -22,17 +19,12 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     console.error('Erro ao carregar logomarca padrão:', e);
   }
 
-  /**
-   * Função auxiliar para desenhar o conteúdo de uma via.
-   * @param yOffset Deslocamento vertical (0 para via inferior, 420.94 para via superior)
-   */
+  
   const drawContent = (yOffset: number) => {
     const pageWidth = 595.28;
     const viaHeight = 420.94;
     const margin = 30;
     const contentWidth = pageWidth - (margin * 2);
-
-    // 1. Desenhar Retângulo de Borda para a Via
     page.drawRectangle({
       x: margin - 10,
       y: yOffset + 15,
@@ -41,12 +33,8 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       borderWidth: 0.5,
       borderColor: rgb(0.8, 0.8, 0.8),
     });
-
-    // AJUSTE FINAL: Baixando o cabeçalho mais 7px (de 368 para 361) para ficar perfeito dentro da borda
     const startY = yOffset + 361;
     let textStartX = margin;
-
-    // 2. Cabeçalho com Logomarca (Lateralizada)
     if (logoImage) {
       const logoHeight = 45;
       const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
@@ -81,8 +69,6 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       });
       currentHeaderY -= 11;
     });
-
-    // 3. Título Principal
     const mainTitle = 'Comprovante de Entrega de Documentos no Setor de A.I.H';
     const titleWidth = fontBold.widthOfTextAtSize(mainTitle, 12);
     page.drawText(mainTitle, {
@@ -91,15 +77,11 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       size: 12,
       font: fontBold
     });
-
-    // 4. Dados do Paciente
     const dataY = startY - 65;
     page.drawText('DADOS DO PACIENTE:', { x: margin, y: dataY, size: 9, font: fontBold });
     page.drawText(`NOME: ${patient.name.toUpperCase()}`, { x: margin, y: dataY - 14, size: 10, font });
     page.drawText(`Nº CADSUS: ${patient.cadSus}`, { x: margin, y: dataY - 28, size: 10, font });
     page.drawText(`TELEFONE: ${patient.phone}`, { x: margin + 250, y: dataY - 28, size: 10, font });
-
-    // 5. Procedimento
     const procY = dataY - 50;
     page.drawText('PROCEDIMENTO:', { x: margin, y: procY, size: 9, font: fontBold });
     const procLines = config.procedimento.split('\n');
@@ -108,11 +90,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       page.drawText(line.toUpperCase(), { x: margin, y: currentProcLineY, size: 9, font });
       currentProcLineY -= 11;
     });
-
-    // 6. Checkboxes (Origem) - Estilo Clean
     const cbY = dataY - 105;
-
-    // Itabuna
     page.drawRectangle({
       x: margin,
       y: cbY,
@@ -124,8 +102,6 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     });
     if (config.isItabuna) page.drawText('X', { x: margin + 2, y: cbY + 2, size: 8, font: fontBold });
     page.drawText('ITABUNA', { x: margin + 15, y: cbY + 1, size: 10, font });
-
-    // M. Pactuado
     page.drawRectangle({
       x: margin + 100,
       y: cbY,
@@ -137,8 +113,6 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     });
     if (config.isMPactuado) page.drawText('X', { x: margin + 102, y: cbY + 2, size: 8, font: fontBold });
     page.drawText('M. PACTUADO', { x: margin + 115, y: cbY + 1, size: 10, font });
-
-    // 7. Datas e Horários
     const dateStr = new Date(config.deliveryDate + 'T00:00:00').toLocaleDateString('pt-BR');
     const returnDateStr = new Date(config.returnDate + 'T00:00:00').toLocaleDateString('pt-BR');
     const deliveryText = `DATA DA ENTREGA: ${dateStr} `;
@@ -147,15 +121,12 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     const deliveryWidth = fontBold.widthOfTextAtSize(deliveryText, 10);
     page.drawText(timeText, { x: margin + 250 + deliveryWidth, y: cbY + 1, size: 10, font });
     page.drawText(`DATA DE RETORNO: ${returnDateStr}`, { x: margin + 250, y: cbY - 25, size: 10, font: fontBold });
-    // 8. Área de Assinatura
     const sigY = yOffset + 130;
     const sigLineWidth = 250;
     const sigLineX = (pageWidth - sigLineWidth) / 2;
     page.drawLine({ start: { x: sigLineX, y: sigY }, end: { x: sigLineX + sigLineWidth, y: sigY }, thickness: 0.5 });
     page.drawText('Equipe Administrativa', { x: sigLineX + 75, y: sigY - 12, size: 9, font: fontBold });
     page.drawText('(Setor A.I.H de Cirurgias Eletivas)', { x: sigLineX + 55, y: sigY - 30, size: 8, font });
-
-    // 9. Notas de Rodapé
     const notesY = yOffset + 60;
     const notes = [
       'a- Comparecer pessoalmente - a partir das 10h (excepcionalmente).',
@@ -171,8 +142,6 @@ export const generatePatientDocument = async (patient: Patient, config: Document
       });
       currentNoteY -= 4;
     });
-
-    // 10. Identificação da Via
     page.drawText(yOffset > 0 ? '1ª VIA - SETOR A.I.H' : '2ª VIA - PACIENTE', {
       x: margin + 400,
       y: startY + 15,
@@ -201,7 +170,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
     return lines;
   }
 
-  drawContent(420.94); // Via Superior
+  drawContent(420.94); 
 
   page.drawLine({
     start: { x: 0, y: 420.94 },
@@ -212,7 +181,7 @@ export const generatePatientDocument = async (patient: Patient, config: Document
   });
   page.drawText('LINHA DE CORTE', { x: 265, y: 416, size: 6, font, color: rgb(0.6, 0.6, 0.6) });
 
-  drawContent(0); // Via Inferior
+  drawContent(0); 
 
   return await pdfDoc.save();
 };

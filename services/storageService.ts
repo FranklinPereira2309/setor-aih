@@ -32,8 +32,6 @@ export const storageService = {
   },
 
   savePatients: async (patients: Patient[]): Promise<void> => {
-    // This is less efficient than individual mutations but used to match existing UI logic
-    // In a real app, we'd use separate insert/update/delete
     try {
       const { error } = await supabase
         .from('patients')
@@ -91,7 +89,6 @@ export const storageService = {
   },
 
   getLogo: (): string | null => {
-    // Logo is now a static asset, keeping signature for compatibility if needed
     return null;
   }
 };

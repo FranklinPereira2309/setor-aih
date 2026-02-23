@@ -28,8 +28,6 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
     const match = proc.split(' - ')[0];
     return match ? match : '';
   });
-
-  // State for Custom Modal
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     title: string;
@@ -72,14 +70,10 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
           });
         }
       }
-
-      // Feedback visual de carregamento para o usuário
       await new Promise(resolve => setTimeout(resolve, 400));
       const bytes = await generatePatientDocument(patient, config);
       const blob = new Blob([bytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-
-      // Limpeza de memória da URL anterior
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
 
       setPdfUrl(url);
@@ -136,14 +130,12 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
       });
     }
   };
-
-  // Carrega automaticamente apenas na montagem do componente para o paciente selecionado
   useEffect(() => {
     createPdf();
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
-  }, [patient]); // Config é ignorado aqui propositalmente para permitir edição manual sem lag
+  }, [patient]); 
 
   const handlePrint = () => {
     if (iframeRef.current) {
@@ -164,7 +156,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
-        {/* Header */}
+        {}
         <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="bg-primary-600 p-2 rounded-xl shadow-lg shadow-primary-100">
@@ -181,7 +173,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          {/* Editor Sidebar */}
+          {}
           <div className="w-full lg:w-96 p-6 border-r border-slate-100 overflow-y-auto bg-white flex flex-col">
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
               <ClipboardList size={14} /> Dados do Comprovante
@@ -304,7 +296,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
             </div>
           </div>
 
-          {/* Preview Panel */}
+          {}
           <div className="flex-1 bg-slate-200 relative flex flex-col p-4">
             <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl mb-4 p-3 flex justify-center gap-4 text-white shadow-2xl">
               <button
@@ -346,7 +338,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ patient, initialConfig, o
           </div>
         </div>
       </div>
-      {/* Modal de Cadastro de Procedimento */}
+      {}
       {showRegisterModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">

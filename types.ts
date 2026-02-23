@@ -3,7 +3,7 @@ export interface Patient {
   id: string;
   name: string;
   phone: string;
-  cadSus: string; // 15 digits
+  cadSus: string; 
   updatedAt: number;
   lastProcedimento?: string;
   isItabuna?: boolean;

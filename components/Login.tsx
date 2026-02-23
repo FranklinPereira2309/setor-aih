@@ -38,12 +38,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Decorative Circles */}
+            {}
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-50" />
             <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-50" />
 
             <div className="w-full max-w-md relative">
-                {/* Logo/Branding Side */}
+                {}
                 <div className="bg-primary-600 rounded-t-[2.5rem] p-10 flex flex-col items-center text-center shadow-xl">
                     <div className="bg-white p-4 rounded-3xl shadow-inner mb-6">
                         <ShieldCheck className="text-primary-600" size={48} />
@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     <p className="text-primary-100 text-sm font-bold mt-2 uppercase tracking-widest">Acesso Restrito</p>
                 </div>
 
-                {/* Form Side */}
+                {}
                 <div className="bg-white rounded-b-[2.5rem] shadow-2xl p-10 border border-slate-100">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (

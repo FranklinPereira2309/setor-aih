@@ -2,9 +2,7 @@ import { supabase } from './storageService';
 import { Procedimento } from '../types';
 
 export const procedimentoService = {
-    /**
-     * Busca um procedimento pelo código exato
-     */
+    
     async getByCode(code: string): Promise<Procedimento | null> {
         try {
             const { data, error } = await supabase
@@ -21,9 +19,7 @@ export const procedimentoService = {
         }
     },
 
-    /**
-     * Cadastra um novo procedimento
-     */
+    
     async create(procedimento: { code: string; description: string }): Promise<Procedimento | null> {
         try {
             const { data, error } = await supabase

@@ -21,12 +21,8 @@ export const validateCPF = (cpf: string): boolean => {
 export const validateCNS = (cns: string): boolean => {
   const cleanCNS = cns.replace(/\D/g, '');
   if (cleanCNS.length !== 15) return false;
-
-  // Regra solicitada: deve começar com 1, 2, 7, 8 ou 9
   const firstDigit = cleanCNS[0];
   if (!['1', '2', '7', '8', '9'].includes(firstDigit)) return false;
-
-  // Algoritmo de soma ponderada para CNS (Modulo 11)
   let sum = 0;
   for (let i = 0; i < 15; i++) {
     sum += parseInt(cleanCNS[i]) * (15 - i);
@@ -39,14 +35,12 @@ export const applyCadSusMask = (value: string): string => {
   const v = value.replace(/\D/g, '').substring(0, 15);
 
   if (v.length <= 11) {
-    // Máscara CPF
     return v
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d)/, '$1.$2')
       .replace(/(\d{3})(\d{1,2})/, '$1-$2')
       .replace(/(-\d{2})\d+?$/, '$1');
   } else {
-    // Máscara CNS
     return v
       .replace(/(\d{3})(\d)/, '$1 $2')
       .replace(/(\d{4})(\d)/, '$1 $2')
@@ -67,8 +61,6 @@ export const validateMobilePhone = (phone: string): { isValid: boolean, formatte
   if (cleanPhone.length !== 11) {
     return { isValid: false };
   }
-
-  // O terceiro dígito deve ser obrigatoriamente 9
   if (cleanPhone[2] !== '9') {
     return { isValid: false };
   }

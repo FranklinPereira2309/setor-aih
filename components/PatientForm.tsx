@@ -25,8 +25,6 @@ import {
 } from 'lucide-react';
 import { procedimentoService } from '../services/procedimentoService';
 import NotificationModal from './NotificationModal';
-
-// Schema de Validação com Zod
 const patientSchema = z.object({
   name: z.string().min(3, 'Nome muito curto'),
   phone: z.string().optional().refine((val) => {
@@ -79,8 +77,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
   const [newCode, setNewCode] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [procedureCode, setProcedureCode] = useState('');
-
-  // State for Custom Modal
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     title: string;
@@ -334,7 +330,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, initialName, onSave,
         </form>
       </div>
 
-      {/* Modal de Cadastro de Procedimento */}
+      {}
       {showRegisterModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
